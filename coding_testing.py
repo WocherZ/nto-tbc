@@ -1,3 +1,6 @@
+from base64 import b64encode
+
+
 class ReedSolomon:
     # Galois fields
     # -- exponents (anti-logarithms)
@@ -264,10 +267,10 @@ class ReedSolomon:
         # count the number of errors
         errCount = len(errPoly) - 1
         if ((errCount * 2) > len(errLoci)):
-            print ("Too many errors to correct")
+            print("Too many errors to correct")
             return (None)
         else:
-            print ("Error count: ", errCount, len(errLoci))
+            print("Error count: ", errCount, len(errLoci))
 
         # calculate the polynomial zeroes
         errList = []
@@ -278,7 +281,7 @@ class ReedSolomon:
                 errList.append(errZed)
 
         if (len(errList) != errCount):
-            print ("Could not locate the errors")
+            print("Could not locate the errors")
             return (None)
         else:
             return (errList)
@@ -336,13 +339,13 @@ class ReedSolomon:
                 codeBuffer[codePos] = 0
                 eraseCount.append(codePos)
         if (len(eraseCount) > errSize):
-            print ("Too many erasures")
+            print("Too many erasures")
             return (None)
 
         # prepare the syndrome polynomial
         polySynd = self._rsSyndPoly(codeBuffer, errSize)
         if (max(polySynd) == 0):
-            print ("The message has no errors")
+            print("The message has no errors")
             return (codeBuffer)
 
         # prepare the error locator polynomial
@@ -351,26 +354,38 @@ class ReedSolomon:
         # locate the message errors
         errList = self._rsFindErr(errLoci, len(codeBuffer))
         if (errList == None):
-            print ("Could not find any errors")
+            print("Could not find any errors")
             return (None)
         else:
-            print ("Located errors: ", errList)
+            print("Located errors: ", errList)
 
         # start correcting errors and erasures
         outMesg = self._rsCorrect(codeBuffer, polySynd, (eraseCount + errList))
         return (outMesg)
 
 
-#!/usr/bin/python3
-def decoder(filein, fileout, filelog):
-    blocksize = 9
-    s = filein.read(blocksize)
-    fooRS = ReedSolomon()
-    if not s:
-        return
-    while True:
-        decoded = fooRS.RSDecode(s, blocksize)
-        fileout.write(decoded)
-        s = filein.read(blocksize)
-        if not s:
-            break
+
+
+# ------
+# MAIN TEST SCRIPT
+# ------
+fooRS = ReedSolomon()
+
+# set the test parametres
+tMesg = "Test message"
+tSize = 12
+
+# encode the message
+tCode = fooRS.RSEncode(tMesg, tSize)
+print("Message codeword: ", tCode)
+
+
+# introduce errors/erasures
+tCode[3] = 9
+tCode[7] = -1
+tCode[10] = 50
+print("Message codeword (with three errors/erasures): ", tCode)
+
+# decode the message
+tMesg = fooRS.RSDecode(tCode, tSize)
+print("Decoded message: ", tMesg)
